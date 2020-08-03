@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+</head>
+<body>
+  <h1>Enter hint to send:</h1>
+  <textarea id="hint" rows="4" cols="50"></textarea><br/>
+  <button type="submit" id="send-button" onclick="sendHint()">Send</button>
+  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+  <script>
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    
+    var hint = document.getElementById('hint');
+    
+    hint.addEventListener("keyup", function(event) {
+      if (event.keyCode === 13) {
+        event.preventDefault();
+        document.getElementById('send-button').click();
+      }
+    })
+    
+    function sendHint() {
+      socket.emit('hint', {hint: hint.value});
+      hint.value='';
+    }
+  </script>
+</body>
