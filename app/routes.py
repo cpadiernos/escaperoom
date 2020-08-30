@@ -1,8 +1,11 @@
 from flask import render_template, request
 from app import app, socketio, db
 from flask_socketio import join_room, emit, send
-from app.models import Game, Puzzle
-from app.schemas import games_schema, game_schema, puzzle_schema, puzzles_schema, puzzle_secondary, puzzles_secondary
+from app.models import Game, Puzzle, Hint
+from app.schemas import (games_schema, game_schema,
+    puzzle_schema, puzzles_schema, puzzle_secondary, puzzles_secondary,
+    hint_schema, hints_schema, hint_secondary, hints_secondary)
+from flask_cors import cross_origin
 
 @app.route('/')
 def index():
@@ -19,11 +22,13 @@ def send_hint(data):
     
 # Game Routes
 @app.route('/api/games', methods=['GET'])
+@cross_origin()
 def get_games():
     all_games = Game.query.all()
     return games_schema.jsonify(all_games)
     
 @app.route('/api/games', methods=['POST'])
+@cross_origin()
 def add_game():
     name = request.json['name']
     description = request.json['description']
@@ -103,6 +108,46 @@ def delete_puzzle(id):
     db.session.commit()
     return puzzle_schema.jsonify(puzzle)
     
+# Hint Routes
+@app.route('/api/hints', methods=['GET'])
+def get_hints():
+    all_hints = Hint.query.all()
+    return hints_schema.jsonify(all_hints)
+    
+@app.route('/api/hints', methods=['POST'])
+def add_hint():
+    text = request.json['text']
+    puzzle_id = request.json['puzzle_id']
+    
+    new_hint = Hint(text, puzzle_id)
+    db.session.add(new_hint)
+    db.session.commit()
+    return hint_schema.jsonify(new_hint)
+    
+@app.route('/api/hints/<id>', methods=['GET'])
+def get_hint(id):
+    hint = Hint.query.filter_by(id=id).first()
+    return hint_schema.jsonify(hint)
+
+@app.route('/api/hints/<id>', methods=[('PUT')])
+def update_hint(id):
+    text = request.json['text']
+    puzzle_id = request.json['puzzle_id']
+    
+    hint = Hint.query.filter_by(id=id).first()
+    hint.text = text
+    hint.puzzle_id = puzzle_id
+
+    db.session.commit()
+    return hint_schema.jsonify(hint)
+    
+@app.route('/api/hints/<id>', methods=['DELETE'])
+def delete_hint(id):
+    hint = Hint.query.filter_by(id=id).first()
+    db.session.delete(hint)
+    db.session.commit()
+    return hint_schema.jsonify(hint)
+    
 # Game and Puzzle Routes
 @app.route('/api/games/<game_id>/puzzles', methods=['GET'])
 def get_puzzles_by_game(game_id):
@@ -113,3 +158,14 @@ def get_puzzles_by_game(game_id):
 def get_puzzle_by_game(game_id, puzzle_id):
     puzzle = Puzzle.query.filter_by(id=puzzle_id, game_id=game_id).first()
     return puzzle_secondary.jsonify(puzzle)
+    
+# Puzzle and Hint Routes
+@app.route('/api/puzzles/<puzzle_id>/hints', methods=['GET'])
+def get_hints_by_puzzle(puzzle_id):
+    puzzle = Puzzle.query.filter_by(id=puzzle_id).first()
+    return hints_secondary.jsonify(puzzle.hints)
+    
+@app.route('/api/puzzles/<puzzle_id>/hints/<hint_id>', methods=['GET'])
+def get_hint_by_puzzle(puzzle_id, hint_id):
+    hint = Hint.query.filter_by(id=hint_id, puzzle_id=puzzle_id).first()
+    return hint_secondary.jsonify(hint)
