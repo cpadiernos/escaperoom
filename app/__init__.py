@@ -7,7 +7,8 @@ from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+#socketio = SocketIO(app, cors_allowed_origins='http://localhost:8080')
+socketio = SocketIO(app, cors_allowed_origins='*')
 app.config.from_object(Config)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)

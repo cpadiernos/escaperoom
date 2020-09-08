@@ -23,9 +23,11 @@ games_schema = GameListSchema(many=True)
     
 class PuzzleDetailSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'name', 'code', 'game_id', 'hints', '_links')
+        fields = ('id', 'name', 'code', 'game_id', 'hints', 'needs', 'holds', '_links')
         
     hints = ma.Nested('HintListSchema', many=True)
+    needs = ma.Nested('ClueListSchema', many=True)
+    holds = ma.Nested('ClueListSchema', many=True)
         
     _links = ma.Hyperlinks(
         {"self": ma.URLFor('get_puzzle', id="<id>")}
@@ -41,7 +43,7 @@ class PuzzleListSchema(ma.Schema):
     
 class PuzzleDetailSecondarySchema(ma.Schema):
     class Meta:
-        fields = ('id', 'name', 'code', 'game_id', 'hints', '_links')
+        fields = ('id', 'name', 'code', 'game_id', 'hints', 'needs', 'holds', '_links')
         
     _links = ma.Hyperlinks({
         "self": ma.URLFor('get_puzzle_by_game', game_id="<game_id>", puzzle_id="<id>"),
@@ -100,3 +102,22 @@ hint_schema = HintDetailSchema()
 hints_schema = HintListSchema(many=True)
 hint_secondary = HintDetailSecondarySchema()
 hints_secondary = HintListSecondarySchema(many=True)
+
+class ClueDetailSchema(ma.Schema):
+    class Meta:
+        fields = ('id', 'name', 'needer', 'holder', '_links')
+    
+    _links = ma.Hyperlinks(
+        {"self": ma.URLFor('get_clue', id="<id>")}
+    )
+    
+class ClueListSchema(ma.Schema):
+    class Meta:
+        fields = ('id', 'name', '_links')
+        
+    _links = ma.Hyperlinks(
+        {"self": ma.URLFor('get_clue', id="<id>")}
+    )
+    
+clue_schema = ClueDetailSchema()
+clues_schema = ClueListSchema(many=True)

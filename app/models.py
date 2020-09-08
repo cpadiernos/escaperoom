@@ -20,6 +20,8 @@ class Puzzle(db.Model):
     name = db.Column(db.String(100), unique=True)
     code = db.Column(db.String(100), unique=True)
     hints = db.relationship('Hint', backref='puzzle', lazy=True)
+    needs = db.relationship('Clue', primaryjoin='Puzzle.id == Clue.needer', backref='puzzle_needs', lazy=True)
+    holds = db.relationship('Clue', primaryjoin='Puzzle.id == Clue.holder', backref='puzzle_holds', lazy=True)
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
     
     def __init__(self, name, code, game_id):
@@ -41,3 +43,17 @@ class Hint(db.Model):
         
     def __repr__(self):
         return f'{self.text}'
+        
+class Clue(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True)
+    needer = db.Column(db.Integer, db.ForeignKey('puzzle.id'))
+    holder = db.Column(db.Integer, db.ForeignKey('puzzle.id'))
+    
+    def __init__(self, name, needer, holder):
+        self.name = name
+        self.needer = needer
+        self.holder = holder
+        
+    def __repr__(self):
+        return f'{self.name}'

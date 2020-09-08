@@ -1,11 +1,11 @@
 from flask import render_template, request
 from app import app, socketio, db
 from flask_socketio import join_room, emit, send
-from app.models import Game, Puzzle, Hint
+from app.models import Game, Puzzle, Hint, Clue
 from app.schemas import (games_schema, game_schema,
     puzzle_schema, puzzles_schema, puzzle_secondary, puzzles_secondary,
-    hint_schema, hints_schema, hint_secondary, hints_secondary)
-from flask_cors import cross_origin
+    hint_schema, hints_schema, hint_secondary, hints_secondary,
+    clue_schema, clues_schema)
 
 @app.route('/')
 def index():
@@ -22,13 +22,11 @@ def send_hint(data):
     
 # Game Routes
 @app.route('/api/games', methods=['GET'])
-@cross_origin()
 def get_games():
     all_games = Game.query.all()
     return games_schema.jsonify(all_games)
     
 @app.route('/api/games', methods=['POST'])
-@cross_origin()
 def add_game():
     name = request.json['name']
     description = request.json['description']
@@ -108,6 +106,16 @@ def delete_puzzle(id):
     db.session.commit()
     return puzzle_schema.jsonify(puzzle)
     
+@app.route('/api/puzzles/<id>/before-puzzles', methods=['GET'])
+def get_before_puzzles_by_puzzle(id):
+    before_puzzles = Puzzle.query.filter(Puzzle.holds.any(Clue.needer==id)).all()
+    return puzzles_schema.jsonify(before_puzzles)
+    
+@app.route('/api/puzzles/<id>/after-puzzles', methods=['GET'])
+def get_after_puzzles_by_puzzle(id):
+    after_puzzles = Puzzle.query.filter(Puzzle.needs.any(Clue.holder==id)).all()
+    return puzzles_schema.jsonify(after_puzzles)
+    
 # Hint Routes
 @app.route('/api/hints', methods=['GET'])
 def get_hints():
@@ -147,6 +155,49 @@ def delete_hint(id):
     db.session.delete(hint)
     db.session.commit()
     return hint_schema.jsonify(hint)
+    
+# Clue Routes
+@app.route('/api/clues', methods=['GET'])
+def get_clues():
+    all_clues = Clue.query.all()
+    return clues_schema.jsonify(all_clues)
+    
+@app.route('/api/clues', methods=['POST'])
+def add_clue():
+    name = request.json['name']
+    needer = request.json['needer']
+    holder = request.json['holder']
+    
+    new_clue = Clue(name, needer, holder)
+    db.session.add(new_clue)
+    db.session.commit()
+    return clue_schema.jsonify(new_clue)
+    
+@app.route('/api/clues/<id>', methods=['GET'])
+def get_clue(id):
+    clue = Clue.query.filter_by(id=id).first()
+    return clue_schema.jsonify(clue)
+    
+@app.route('/api/clues/<id>', methods=[('PUT')])
+def update_clue(id):
+    name = request.json['name']
+    needer = request.json['needer']
+    holder = request.json['holder']
+    
+    clue = Clue.query.filter_by(id=id).first()
+    clue.name = name
+    clue.needer = needer
+    clue.holder = holder
+    
+    db.session.commit()
+    return clue_schema.jsonify(clue)
+    
+@app.route('/api/clues/<id>', methods=['DELETE'])
+def delete_clue(id):
+    clue = Clue.query.filter_by(id=id).first()
+    db.session.delete(clue)
+    db.session.commit()
+    return clue_schema.jsonify(clue)
     
 # Game and Puzzle Routes
 @app.route('/api/games/<game_id>/puzzles', methods=['GET'])
