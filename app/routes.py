@@ -5,7 +5,7 @@ from app.models import Game, Puzzle, Hint, Clue
 from app.schemas import (games_schema, game_schema,
     puzzle_schema, puzzles_schema, puzzle_secondary, puzzles_secondary,
     hint_schema, hints_schema, hint_secondary, hints_secondary,
-    clue_schema, clues_schema)
+    clue_schema, clues_schema, clue_secondary, clues_secondary)
 
 @app.route('/')
 def index():
@@ -14,7 +14,7 @@ def index():
 @app.route('/hint/')
 def show_hint():
     return render_template('hint_screen.html')
-    
+  
 @socketio.on('hint')
 def send_hint(data):
     hint = data['hint']
@@ -51,7 +51,7 @@ def update_game(id):
     game = Game.query.filter_by(id=id).first()
     game.name = name
     game.description = description
-    game.numb_of_players = num_of_players
+    game.num_of_players = num_of_players
 
     db.session.commit()
     return game_schema.jsonify(game)
@@ -220,3 +220,14 @@ def get_hints_by_puzzle(puzzle_id):
 def get_hint_by_puzzle(puzzle_id, hint_id):
     hint = Hint.query.filter_by(id=hint_id, puzzle_id=puzzle_id).first()
     return hint_secondary.jsonify(hint)
+    
+#Puzzle and Clues Routes
+@app.route('/api/puzzles/<puzzle_id>/clues', methods=['GET'])
+def get_clues_by_puzzle(puzzle_id):
+    puzzle = Puzzle.query.filter_by(id=puzzle_id).first()
+    return clues_secondary.jsonify(puzzle.holds)
+    
+@app.route('/api/puzzles/<puzzle_id>/clues/<clue_id>', methods=['GET'])
+def get_clue_by_puzzle(puzzle_id, clue_id):
+    clue = Clue.query.filter_by(id=clue_id, holder=puzzle_id).first()
+    return clue_secondary.jsonify(clue)
