@@ -159,3 +159,24 @@ clue_schema = ClueDetailSchema()
 clues_schema = ClueListSchema(many=True)
 clue_secondary = ClueDetailSecondarySchema()
 clues_secondary = ClueListSecondarySchema(many=True)
+
+class EventDetailSchema(ma.Schema):
+    class Meta:
+        fields = ('id', 'game_id', 'num_of_players', 'date', 'start_time', 'end_time', '_links')
+        ordered = True
+        
+    _links = ma.Hyperlinks(
+        {"self": ma.URLFor('get_event', id="<id>")}
+    )
+
+class EventListSchema(ma.Schema):
+    class Meta:
+        fields = ('id', 'game_id', 'num_of_players', 'date', '_links')
+        ordered = True
+        
+    _links = ma.Hyperlinks(
+        {"self": ma.URLFor('get_event', id="<id>")}
+    )
+        
+event_schema = EventDetailSchema()
+events_schema = EventListSchema(many=True)

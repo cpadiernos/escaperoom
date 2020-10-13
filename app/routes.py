@@ -1,11 +1,13 @@
 from flask import render_template, request
 from app import app, socketio, db
 from flask_socketio import join_room, emit, send
-from app.models import Game, Puzzle, Hint, Clue
+from app.models import Game, Puzzle, Hint, Clue, Event
 from app.schemas import (games_schema, game_schema,
     puzzle_schema, puzzles_schema, puzzle_secondary, puzzles_secondary,
     hint_schema, hints_schema, hint_secondary, hints_secondary,
-    clue_schema, clues_schema, clue_secondary, clues_secondary)
+    clue_schema, clues_schema, clue_secondary, clues_secondary,
+    event_schema, events_schema)
+from datetime import datetime, timedelta
 
 @app.route('/')
 def index():
@@ -14,11 +16,16 @@ def index():
 @app.route('/hint/')
 def show_hint():
     return render_template('hint_screen.html')
-  
+    
 @socketio.on('hint')
 def send_hint(data):
     hint = data['hint']
     emit('hint', hint, broadcast=True)
+    
+@socketio.on('event')
+def send_hint(data):
+    status = data['status']
+    emit('event', status, broadcast=True)
     
 # Game Routes
 @app.route('/api/games', methods=['GET'])
@@ -231,3 +238,35 @@ def get_clues_by_puzzle(puzzle_id):
 def get_clue_by_puzzle(puzzle_id, clue_id):
     clue = Clue.query.filter_by(id=clue_id, holder=puzzle_id).first()
     return clue_secondary.jsonify(clue)
+    
+# Event Routes
+@app.route('/api/events', methods=['GET'])
+def get_events():
+    all_events = Event.query.all()
+    return events_schema.jsonify(all_events)
+    
+@app.route('/api/events', methods=['POST'])
+def add_event():
+    game_id = request.json['game_id']
+    num_of_players = request.json['num_of_players']
+    date = datetime.now().date()
+    now = datetime.now().replace(microsecond=0)
+    start_time = now.time()
+    end_time = (now + timedelta(hours=1)).time()
+    
+    new_event = Event(game_id, num_of_players, date, start_time, end_time)
+    db.session.add(new_event)
+    db.session.commit()
+    return event_schema.jsonify(new_event)
+    
+@app.route('/api/events/<id>', methods=['GET'])
+def get_event(id):
+    event = Event.query.filter_by(id=id).first()
+    return event_schema.jsonify(event)
+    
+@app.route('/api/events/active', methods=['GET'])
+def get_active_event():
+    today = datetime.now().date()
+    time_now = datetime.now().replace(microsecond=0).time()
+    event = Event.query.filter_by(date=today).filter(Event.end_time > time_now).first()
+    return event_schema.jsonify(event)

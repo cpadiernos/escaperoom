@@ -57,3 +57,21 @@ class Clue(db.Model):
         
     def __repr__(self):
         return f'{self.name}'
+        
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    game_id = db.Column(db.Integer, db.ForeignKey('game.id'))
+    num_of_players = db.Column(db.Integer)
+    date = db.Column(db.Date)
+    start_time = db.Column(db.Time)
+    end_time = db.Column(db.Time)
+    
+    def __init__(self, game_id, num_of_players, date, start_time, end_time):
+        self.game_id = game_id
+        self.num_of_players = num_of_players
+        self.date = date
+        self.start_time = start_time
+        self.end_time = end_time
+    
+    def __repr__(self):
+        return f'{self.num_of_players} - {self.date}'
