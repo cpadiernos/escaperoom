@@ -6,6 +6,7 @@ class Game(db.Model):
     description = db.Column(db.String(100))
     num_of_players = db.Column(db.Integer)
     puzzles = db.relationship('Puzzle', backref='game', lazy=True)
+    events = db.relationship('Event', backref='game', lazy=True)
     
     def __init__(self, name, description, num_of_players):
         self.name = name

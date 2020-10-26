@@ -2,10 +2,11 @@ from app import ma
 
 class GameDetailSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'name', 'description', 'num_of_players', 'puzzles','_links')
+        fields = ('id', 'name', 'description', 'num_of_players', 'puzzles', 'events', '_links')
         ordered = True
         
     puzzles = ma.Nested('PuzzleListSchema', many=True)
+    events = ma.Nested('EventListSchema', many=True)
     
     _links = ma.Hyperlinks(
         {"self": ma.URLFor('get_game', id="<id>")}
