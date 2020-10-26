@@ -3,7 +3,7 @@ from app import db
 class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True)
-    description = db.Column(db.String(100))
+    description = db.Column(db.String(350))
     num_of_players = db.Column(db.Integer)
     puzzles = db.relationship('Puzzle', backref='game', lazy=True)
     events = db.relationship('Event', backref='game', lazy=True)
@@ -35,7 +35,7 @@ class Puzzle(db.Model):
 
 class Hint(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    text = db.Column(db.String(200), unique=True)
+    text = db.Column(db.String(250), unique=True)
     puzzle_id = db.Column(db.Integer, db.ForeignKey('puzzle.id'))
     
     def __init__(self, text, puzzle_id):
