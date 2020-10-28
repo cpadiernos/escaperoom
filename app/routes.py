@@ -268,5 +268,5 @@ def get_event(id):
 def get_active_event():
     today = datetime.now().date()
     time_now = datetime.now().replace(microsecond=0).time()
-    event = Event.query.filter_by(date=today).filter(Event.end_time > time_now).first()
+    event = Event.query.filter_by(date=today).filter(Event.end_time > time_now).order_by(Event.start_time.desc()).first()
     return event_schema.jsonify(event)
